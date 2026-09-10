@@ -1,0 +1,183 @@
+---
+title: "Clean Up Gates"
+format: html
+---
+
+# Background
+
+The purpose of this [Quarto Markdown File](), is to clean up the .fcs files acquired as part of the [Baltimore Introductory Spectral Cytometry Course]() for just the cells that are of interest for signature characterization. This code originally derives from code featured as part of the [Cytometry in R]() course. 
+
+# Getting Started
+
+## Set Up
+
+First, after confirming that they are installed, we need to attach any R packages that will be needed to our local computer environment. 
+
+```{r}
+library(dplyr)
+library(stringr)
+library(ggplot2)
+library(flowWorkspace)
+library(flowGate)
+library(Luciernaga)
+```
+
+Specify where to find your fcs files, as well as where you want to store your pdf files once you create them. 
+
+```{r}
+Instrument <- "5L"
+Day <- "1"
+
+InstrumentFull <- paste0("Aurora", Instrument)
+DayFull <- paste0("Day", Day)
+StorageLocation <- file.path("data_2025", InstrumentFull, DayFull, "Raw", "Reference Group")
+
+OutputLocation <- file.path("data_2025", InstrumentFull, DayFull, "Raw", "Reference Group_Cleaned")
+
+if(!dir.exists(OutputLocation)){dir.create(OutputLocation)}
+```
+
+Checking our designated location, to make sure the .fcs files are actually there
+
+```{r}
+fcs_files <- list.files(StorageLocation, pattern=".fcs", full.names=TRUE)
+fcs_files
+```
+
+We next need to distinguish between bead and cell controls
+
+```{r}
+Cells <- fcs_files[str_detect(fcs_files, "Cells")]
+Beads <- fcs_files[str_detect(fcs_files, "Beads")]
+```
+
+## GatingSet
+
+### Cells
+
+In parallel, wrapping the required frameworks that are needed for gating. 
+
+```{r}
+CellsCS <- load_cytoset_from_fcs(Cells, truncate_max_range=FALSE, transformation=FALSE)
+CellsGS <- GatingSet(CellsCS)
+```
+
+```{r}
+SFC_Parameters <- colnames(CellsGS)
+FluorophoresOnly <- SFC_Parameters[!stringr::str_detect(SFC_Parameters, "FSC|SSC|Time")]
+
+Biexponential <-  flowjo_biexp_trans(channelRange=4096, maxValue=4194304,
+  pos=5.62, neg=0, widthBasis=-1000)
+MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
+```
+
+```{r}
+transform(CellsGS, MyBiexTransform)
+```
+
+### Beads
+
+```{r}
+#| eval: FALSE
+BeadsCS <- load_cytoset_from_fcs(Beads, truncate_max_range=FALSE, transformation=FALSE)
+BeadsGS <- GatingSet(Beads)
+```
+
+Transforming the data so everything is visible as we would in SpectroFlo
+
+```{r}
+#| eval: FALSE
+SFC_Parameters <- colnames(BeadsGS)
+FluorophoresOnly <- SFC_Parameters[!stringr::str_detect(SFC_Parameters, "FSC|SSC|Time")]
+
+Biexponential <-  flowjo_biexp_trans(channelRange=4096, maxValue=4194304,
+  pos=5.62, neg=0, widthBasis=-1000)
+MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
+```
+
+```{r}
+#| eval: FALSE
+transform(BeadsGS, MyBiexTransform)
+```
+
+## Gating
+
+Assembling a Gating Template. 
+
+### Cells
+
+```{r}
+CellGatingTable <- tibble::tribble(
+  ~filterId,    ~dims,                          ~subset,      
+  "scatter",    list("FSC-A", "SSC-A"),      "root",  
+  "singlets",   list("FSC-A", "FSC-H"),      "scatter",  
+)
+```
+
+```{r}
+#| eval: FALSE
+flowGate::gs_apply_gating_strategy(CellsGS, gating_strategy = CellGatingTable)
+```
+
+```{r}
+#| eval: FALSE
+gs_apply_gate_check(gs=CellsGS, gate="scatter")
+```
+
+```{r}
+#| eval: FALSE
+gs_apply_gate_check(gs=CellsGS, gate="singlets")
+```
+
+### Beads
+
+```{r}
+BeadGatingTable <- tibble::tribble(
+  ~filterId,    ~dims,                          ~subset,      
+  "scatter",    list("FSC-A", "SSC-A"),      "root",  
+  "singlets",   list("FSC-A", "FSC-H"),      "scatter",  
+)
+```
+
+```{r}
+#| eval: FALSE
+flowGate::gs_apply_gating_strategy(BeadsGS, gating_strategy = BeadGatingTable)
+```
+
+```{r}
+#| eval: FALSE
+gs_apply_gate_check(gs=BeadsGS, gate="scatter")
+```
+
+```{r}
+#| eval: FALSE
+gs_apply_gate_check(gs=BeadsGS, gate="singlets")
+```
+
+
+
+## Export
+
+```{r}
+RFolder <- here::here("R")
+MyFunctions <- list.files(RFolder, full.names=TRUE)
+purrr::walk(.x=MyFunctions, .f=source)
+```
+
+### Cells
+
+```{r}
+Data <- gs_pop_get_stats(CellsGS, "singlets")
+Data
+```
+
+```{r}
+summary(Data)
+```
+
+```{r}
+AllDNs <- purrr::map(.x=CellsGS, subset="singlets", .f=Downsampling,
+ DownsampleCount=178000, addon="", returnType="fcs",
+ StorageLocation=OutputLocation)
+```
+

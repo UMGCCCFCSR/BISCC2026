@@ -1,0 +1,186 @@
+---
+title: "Signature Matrix"
+format: html
+---
+
+# Background
+
+The purpose of this [Quarto Markdown File](), is to derive the signature matrix for the single-color control .fcs files acquired as part of the [Baltimore Introductory Spectral Cytometry Course]() for just the cells that are of interest for signature characterization. This code originally derives from code featured as part of the [Cytometry in R]() course. 
+
+# Getting Started
+
+## Set Up
+
+First, after confirming that they are installed, we need to attach any R packages that will be needed to our local computer environment. 
+
+```{r}
+library(dplyr)
+library(stringr)
+library(ggplot2)
+library(flowWorkspace)
+library(flowGate)
+library(Luciernaga)
+```
+
+Specify where to find your fcs files, as well as where you want to store your pdf files once you create them. 
+
+```{r}
+Instrument <- "5L"
+Day <- "1"
+
+NumberDetectors <- 64
+UnstainedDetector <- "UV7"
+
+InstrumentFull <- paste0("Aurora", Instrument)
+DayFull <- paste0("Day", Day)
+StorageLocation <- file.path("data_2025", InstrumentFull, DayFull, "Raw", "Reference Group")
+OutputLocation <- file.path("data_2025", InstrumentFull, DayFull, "Raw", "outputs")
+
+if (!dir.exists(OutputLocation)){dir.create(OutputLocation)}
+```
+
+Checking our designated location, to make sure the .fcs files are actually there
+
+```{r}
+fcs_files <- list.files(StorageLocation, pattern=".fcs", full.names=TRUE)
+fcs_files
+```
+
+```{r}
+TheCS <- load_cytoset_from_fcs(fcs_files, truncate_max_range=FALSE, transformation=FALSE)
+TheGS <- GatingSet(TheCS)
+```
+
+```{r}
+SFC_Parameters <- colnames(TheGS)
+FluorophoresOnly <- SFC_Parameters[!stringr::str_detect(SFC_Parameters, "FSC|SSC|Time")]
+
+Biexponential <-  flowjo_biexp_trans(channelRange=4096, maxValue=4194304,
+  pos=5.62, neg=0, widthBasis=-1000)
+MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
+```
+
+```{r}
+transform(TheGS, MyBiexTransform)
+```
+
+## Signature Matrix
+
+```{r}
+IntermediateMetadata <- pData(TheGS) |>
+  mutate(
+    name_clean  = str_remove(name, "^PD_AD_"),
+    Antigen     = str_extract(name_clean, "^\\S+"),
+    Fluorophore = str_match(name_clean, "^\\S+\\s(.*)\\s\\((?:Beads|Cells)\\)")[, 2],
+    Type        = str_extract(name_clean, "(?<=\\()(?:Beads|Cells)(?=\\))"),
+    Detector    = "",
+    Negative    = "Unstained"
+  )
+     
+IntermediateMetadata <- IntermediateMetadata |> 
+  mutate(Antigen = case_when(
+    Antigen == "1DeadCells" ~ "DeadCells",
+    TRUE ~ Antigen
+  )) 
+  
+IntermediateMetadata <- IntermediateMetadata |>
+  mutate(Fluorophore = case_when(
+    is.na(Fluorophore) ~ Antigen,
+    TRUE ~ Fluorophore
+  ))
+
+IntermediateMetadata <- IntermediateMetadata |>
+  mutate(Negative = case_when(
+    Fluorophore == "7-AAD" ~ "DeadCells", # Consider flexibility
+    TRUE ~ Negative
+  )) 
+
+IntermediateMetadata <- IntermediateMetadata |> mutate(
+    Detector = purrr::map_chr(Fluorophore, \(f) DetectorGuess(x = f, NumberDetectors = NumberDetectors))
+  )
+
+IntermediateMetadata <- IntermediateMetadata |> select(-name_clean) |> relocate(name, Fluorophore, Antigen, Type, Detector, Negative)
+
+IntermediateMetadata <- IntermediateMetadata |>
+  mutate(Detector = case_when(
+    str_detect(Fluorophore, "Unstained") ~ UnstainedDetector, # Consider flexibility
+    TRUE ~ Detector
+  )) 
+
+IntermediateMetadata <- IntermediateMetadata |>
+  mutate(Detector = case_when(
+    str_detect(Fluorophore, "Dead") ~ UnstainedDetector, # Consider flexibility
+    TRUE ~ Detector
+  )) 
+
+pData(TheGS) <- IntermediateMetadata
+```
+
+# Create our peak detectors gates 
+
+```{r}
+#| eval: FALSE
+InitialUnmixSpanGates(template=IntermediateMetadata, gs=TheGS, subset="root", minpercentile=0.75, maxpercentile = 0.99)
+```
+
+```{r}
+#| eval: FALSE
+plot(TheGS)
+```
+
+```{r}
+#| eval: FALSE
+CheckUnmixingSpanGates(template=IntermediateMetadata, gs=TheGS, AdjustAll=TRUE)
+```
+
+```{r}
+#| eval: FALSE
+SaveName <- paste0("Aurora", Instrument, "_Day", Day, "UnmixingControls.gs") 
+SaveHere <- file.path(OutputLocation, SaveName)
+save_gs(TheGS, SaveHere)
+```
+
+```{r}
+SaveName <- paste0("Aurora", Instrument, "_Day", Day, "UnmixingControls.gs") 
+SaveHere <- file.path(OutputLocation, SaveName)
+TheGS <- load_gs(SaveHere)
+```
+
+```{r}
+plot(TheGS)
+```
+
+```{r}
+RawValuesTemplate <- RetrieveAverageSignature(template=IntermediateMetadata, gs=TheGS, inverse.transform = TRUE)
+RawValues <- BackgroundSubtraction(data=RawValuesTemplate, Normalize=FALSE, keepNegatives=FALSE)
+```
+
+# View Signatures
+
+## Raw Values
+
+```{r}
+Plot <- VisualizeSignatures(columnname="Fluorophore", data=RawValues,
+ Normalize=FALSE, characterColumns="Fluorophore")
+
+plotly::ggplotly(Plot)
+```
+
+## Normalized Values
+
+```{r}
+Plot <- VisualizeSignatures(columnname="Fluorophore", data=RawValues,
+ Normalize=TRUE, characterColumns="Fluorophore")
+
+plotly::ggplotly(Plot)
+```
+
+
+# Save the Dataset
+
+```{r}
+SaveName <- paste0("Aurora", Instrument, "_Day", Day, "SignatureValues.csv") 
+SaveHere <- file.path(OutputLocation, SaveName)
+
+write.csv(RawValues, SaveHere, row.names=FALSE)
+```
