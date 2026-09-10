@@ -1,0 +1,15 @@
+{
+  "hash": "985b6de4f36ed83e860f922726e6d395",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\nformat:\n  dashboard:\n    orientation: columns\naliases: \n  - home.html\nproject:\n  output-dir: docs/\n---\n\n\n::: {.cell}\n\n:::\n\n\n## {.sidebar}\nDashboard contains the materials for the **Baltimore Introductory Spectral Cytometry Course 2026**.\n\n**Navigation:**\n\nFrom the Home page, click on your instrument and the corresponding day to navigate to the corresponding interactive materials. \n\n**About**\n\nThis course is run by the [UMGCC FCSS](https://www.medschool.umaryland.edu/cibr/core/umgccc_flow/), an ISAC recognized Shared Resource Laboratory. \n\nFor additional flow cytometry resources, please visit our [website](https://sites.google.com/view/umgcccflow/home)\n\nThis dashboard was created with [Quarto](https://quarto.org/) and is maintained by [David Rach](https://github.com/DavidRach)\n\n\n## First Row {height=\"50%\"}\n\n### Cytek Aurora 3L {width=\"50%\"}\n\n::: {.card title=\"\" width=\"33%\"}\n\n:::\n\n\n::: {.cell content='valuebox' title='Cytek Aurora 3L' icon='cup-hot'}\n::: {.cell-output-display}\n\n```{=html}\n\n<ul>\n  <li><a href='Day1_3L.html'>Day 1</a></li>\n  <li><a href='Day2_3L.html'>Day 2</a></li>\n  <li><a href='Day3_3L.html'>Day 3</a></li>\n  <li><a href='Day4_3L.html'>Day 4</a></li>\n  <li><a href='Day5_3L.html'>Day 5</a></li>\n</ul>\n\n```\n\n:::\n:::\n\n\n### Cytek Aurora 5L {width=\"50%\"}\n\n::: {.card title=\"\" width=\"33%\"}\n\n:::\n\n\n::: {.cell content='valuebox' title='Cytek Aurora 5L' icon='cup-hot'}\n::: {.cell-output-display}\n\n```{=html}\n\n<ul>\n  <li><a href='Day1_5L.html'>Day 1</a></li>\n  <li><a href='Day2_5L.html'>Day 2</a></li>\n  <li><a href='Day3_5L.html'>Day 3</a></li>\n  <li><a href='Day4_5L.html'>Day 4</a></li>\n  <li><a href='Day5_5L.html'>Day 5</a></li>\n</ul>\n\n```\n\n:::\n:::\n\n\n## Second Row {height=\"50%\"}\n\n### Cytek Aurora 4L {width=\"50%\"}\n\n\n::: {.cell content='valuebox' title='Cytek Aurora 4L' icon='cup-hot'}\n::: {.cell-output-display}\n\n```{=html}\n\n<ul>\n  <li><a href='Day1_4L.html'>Day 1</a></li>\n  <li><a href='Day2_4L.html'>Day 2</a></li>\n  <li><a href='Day3_4L.html'>Day 3</a></li>\n  <li><a href='Day4_4L.html'>Day 4</a></li>\n  <li><a href='Day5_4L.html'>Day 5</a></li>\n</ul>\n\n```\n\n:::\n:::\n\n\n::: {.card title=\"\" width=\"33%\"}\n\n:::\n\n### Cytek Aurora CS {width=\"50%\"}\n\n\n::: {.cell content='valuebox' title='Cytek Aurora CS' icon='cup-hot'}\n::: {.cell-output-display}\n\n```{=html}\n\n<ul>\n  <li><a href='Day1_CS.html'>Day 1</a></li>\n  <li><a href='Day2_CS.html'>Day 2</a></li>\n  <li><a href='Day3_CS.html'>Day 3</a></li>\n  <li><a href='Day4_CS.html'>Day 4</a></li>\n  <li><a href='Day5_CS.html'>Day 5</a></li>\n</ul>\n\n```\n\n:::\n:::\n\n\n::: {.card title=\"\" width=\"33%\"}\n\n:::\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

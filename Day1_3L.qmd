@@ -1,0 +1,162 @@
+---
+title: "Day 1"
+page-layout: full
+toc: true
+---
+
+```{r}
+#| include: false
+#| echo: false
+#| warning: false
+#| message: false
+library(dplyr)
+library(Luciernaga)
+library(flowCore)
+library(flowWorkspace)
+library(openCyto)
+```
+
+```{r}
+#| include: false
+#| eval: false
+#| warning: false
+#| message: false
+# Autofluorescence Signatures
+path <- file.path("/home", "david", "Desktop", "BISCC", "Aurora3L")
+files <- list.files(path=path, pattern="Unstained", full.names=TRUE)
+MyCytoSet <- load_cytoset_from_fcs(files, truncate_max_range = FALSE, transform = FALSE)
+MyGatingSet <- GatingSet(MyCytoSet)
+FileLocation <- system.file("extdata", package = "Luciernaga")
+MyGates <- data.table::fread(file.path(path = FileLocation, pattern = 'Gates.csv'))
+MyGatingTemplate <- gatingTemplate(MyGates)
+gt_gating(MyGatingTemplate, MyGatingSet)
+
+IndividualPlot <- Utility_GatingPlots(x=MyGatingSet[[1]],
+ sample.name = "GUID", removestrings = ".fcs", gtFile = MyGates,
+ DesiredGates = NULL, outpath = path, returnType="patchwork")
+
+FileLocation <- system.file("extdata", package = "Luciernaga")
+pattern = "AutofluorescentOverlaps.csv"
+AFOverlap <- list.files(path=FileLocation, pattern=pattern,
+                        full.names = TRUE)
+AFOverlap_CSV <- read.csv(AFOverlap, check.names = FALSE)
+
+UnstainedSignature <- Luciernaga_QC(x=MyGatingSet[1],
+                                    subsets="nonDebris", 
+                                    removestrings=".fcs",
+                                    sample.name="GUID",
+                                    unmixingcontroltype = "cells",
+                                    Unstained = TRUE, 
+                                    ratiopopcutoff = 0.05,
+                                    Verbose = FALSE,
+                                    AFOverlap = AFOverlap,
+                                    stats = "median",
+                                    ExportType = "data",
+                                    SignatureReturnNow = FALSE,
+                                    outpath = outpath,
+                                    Increments=0.2, experiment="Test",
+                                    condition="test",
+                                     minimalfcscutoff = 0.05)
+
+write.csv(UnstainedSignature, "data/Unstained3L.csv", row.names=FALSE)                                     
+```
+
+### Panel
+
+```{r}
+#| code-fold: true
+library(Luciernaga)
+library(dplyr)
+
+TheUnstained <- read.csv("data/Unstained3L.csv", check.names=FALSE)
+TheUnstained <- TheUnstained |> select(-Experiment, -Condition, -Count, -Sample) |> slice(1)
+Unstained <- TheUnstained
+
+Panel <- file.path("data", "Panel.csv")
+Panel <- read.csv(Panel, check.names=FALSE) |> dplyr::filter(Day %in% c(1))
+GT <- FluorophoreMatrix(data=Panel, NumberDetectors = 38)
+```
+
+```{r}
+#| echo: FALSE
+GT 
+```
+
+### Fluorescent Signatures
+
+```{r}
+#| code-fold: true
+Fluorophore <- FluorophoreMatrix(data=Panel, NumberDetectors = 38, returnType="data") |> pull(Fluorophore)
+
+Plots <- QC_ReferenceLibrary(FluorNameContains = Fluorophore, NumberDetectors=38,
+returnPlots=TRUE, plotname=" ", exact=TRUE, unstained=Unstained)
+```
+
+```{r}
+#| echo: false
+plotly:: ggplotly(Plots[[2]])
+```
+
+### Unmixing Matrix
+
+```{r}
+#| code-fold: true
+TheFluorophores <- FluorophoreMatrix(data=Panel, NumberDetectors = 38,
+ returnType="data") |> pull(Fluorophore)
+
+Data <- Luciernaga:::InstrumentReferences(NumberDetectors=38)
+Data <- Data |> dplyr::filter(Fluorophore %in% TheFluorophores) |> select(-Instrument) |>
+    tidyr::pivot_wider(names_from = "Detector", values_from = "AdjustedY")
+
+colnames(Unstained) <- gsub("-A", "", colnames(Unstained))
+Unstained <- Unstained |> select(where(is.numeric)) |>
+     AveragedSignature(stats="median", normalize=TRUE) |>
+     mutate(Fluorophore="Unstained") |> relocate(Fluorophore, .before=1)
+
+Data <- bind_rows(Data, Unstained)
+```
+
+```{r}
+#| echo: false
+Data1 <- Data
+Data1[2:ncol(Data1)] <- round(Data1[2:ncol(Data1)], 2)
+gt::gt(Data1)
+```
+
+### Cosine (Similarity) Matrix
+
+```{r}
+#| code-fold: true
+Cosine <- Luciernaga_Cosine(data=Data, limitlow=0, colorlow="orange")
+```
+
+```{r}
+#| echo: false
+plotly::ggplotly(Cosine)
+```
+
+### Kappa (Complexity Index)
+
+```{r}
+#| echo: FALSE
+Without <- Data |> dplyr::filter(!Fluorophore %in% "Unstained") |>
+     dplyr::select(-Fluorophore) |> kappa()
+print(paste0("The Complexity Index without the Unstained is ", round(Without, 2)))
+
+With <- Data |> dplyr::select(-Fluorophore) |> kappa()
+print(paste0("The Complexity Index with the Unstained is ", round(With, 2)))
+```
+
+### Unmixing-dependent Spreading (UDS) Hotspot Matrix
+
+```{r}
+#| code-fold: true
+Unstained <- Unstained |> select(-Fluorophore)
+
+Hotspot <- Luciernaga:::MagesCauldron(panelfluors=TheFluorophores, unstained = Unstained)
+```
+
+```{r}
+#| echo: false
+plotly::ggplotly(Hotspot)
+```
