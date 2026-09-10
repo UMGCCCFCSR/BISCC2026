@@ -1,0 +1,8 @@
+"name","Fluorophore","Antigen","Type","Detector","Negative"
+"1DeadCells (Cells).fcs","DeadCells","DeadCells","Cells","UV7","Unstained"
+"PD_AD_CD3 Spark Blue 550 (Cells).fcs","Spark Blue 550","CD3","Cells","B3","Unstained"
+"PD_AD_CD4 BV605 (Cells).fcs","BV605","CD4","Cells","V10","Unstained"
+"PD_AD_CD45 Alexa Fluor 700 (Cells).fcs","Alexa Fluor 700","CD45","Cells","R4","Unstained"
+"PD_AD_CD8 BV510 (Cells).fcs","BV510","CD8","Cells","V7","Unstained"
+"PD_AD_Viability 7-AAD (Cells).fcs","7-AAD","Viability","Cells","YG4","DeadCells"
+"Unstained (Cells).fcs","Unstained","Unstained","Cells","UV7","Unstained"

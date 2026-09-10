@@ -175,6 +175,30 @@ Plot <- VisualizeSignatures(columnname="Fluorophore", data=RawValues,
 plotly::ggplotly(Plot)
 ```
 
+# Unstained
+
+```{r}
+JustUnstaineds <- IntermediateMetadata |> dplyr::filter(Fluorophore %in% "Unstained")
+
+Unstained <- LuciernagaIntegration(template=JustUnstaineds[1,],
+ gs=TheGS, GuessSimilar=FALSE, Unstained=TRUE,
+ inverse.transform=TRUE)[[1]]
+```
+
+```{r}
+Plot <- Unstained$LuciernagaQC_Signatures + ggplot2::theme(legend.position = "none")
+SaveName <- paste0("Aurora", Instrument, "_Day", Day, "AllAF.png") 
+SaveAsThis <- file.path(OutputLocation, SaveName)
+ggsave(SaveAsThis, units ="in", width = 12, height = 8)
+```
+
+```{r}
+Plot <- Unstained$LuciernagaQC_AmalgamatedPlot + ggplot2::theme(legend.position = "none")
+SaveName <- paste0("Aurora", Instrument, "_Day", Day, "AmalgamatedAF.png") 
+SaveAsThis <- file.path(OutputLocation, SaveName)
+ggsave(SaveAsThis, units ="in", width = 12, height = 8)
+```
+
 
 # Save the Dataset
 
@@ -184,3 +208,11 @@ SaveHere <- file.path(OutputLocation, SaveName)
 
 write.csv(RawValues, SaveHere, row.names=FALSE)
 ```
+
+```{r}
+SaveName <- paste0("Aurora", Instrument, "_Day", Day, "Metadata.csv") 
+SaveHere <- file.path(OutputLocation, SaveName)
+
+write.csv(IntermediateMetadata, SaveHere, row.names=FALSE)
+```
+
