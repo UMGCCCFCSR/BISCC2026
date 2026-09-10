@@ -5,7 +5,7 @@ format:
 embed-resources: TRUE
 ---
 
-![](images/BISCC2026.png){fig-align="left" width="300"}
+![](images/BISCC26.png){fig-align="left" width="300"}
 
 ## **The Baltimore Introductory Spectral Cytometry Course 2026**
 
@@ -19,7 +19,7 @@ embed-resources: TRUE
 
 11:00 - 11:50 AM: Introduction to SpectroFlo
 
-12:00 - 01:30 PM: Lunch (sponsored by BD Biosciences)
+12:00 - 01:30 PM: Lunch
 
 01:30 - 02:00 PM: Laboratory and Core Protocol Roundup
 
@@ -31,7 +31,7 @@ embed-resources: TRUE
 
 10:30 - 11:50 AM: Fluorophores and Panel Design
 
-12:00 - 01:30 PM: Lunch (sponsored by Biolegend)
+12:00 - 01:30 PM: Lunch
 
 01:30 - 02:00 PM: Experiment Roundup
 
@@ -45,7 +45,7 @@ embed-resources: TRUE
 
 10:30 - 11:50 AM: Cytek Training Workshop - Data Evaluation 
 
-12:00 - 01:30 PM: Lunch (sponsored by Cytek Biosciences)
+12:00 - 01:30 PM: Lunch
 
 01:30 - 02:00 PM: Acquisition Roundup
 
@@ -57,7 +57,7 @@ embed-resources: TRUE
 
 10:30- 11:50 AM: Co-expression and Unmixing.
 
-12:00 - 01:30 PM: Lunch (sponsored by ThermoFisher)
+12:00 - 01:30 PM: Lunch
 
 01:30 - 02:00 PM: Troubleshooting Complex Sample Roundup
 
@@ -69,7 +69,7 @@ embed-resources: TRUE
 
 10:30 - 11:50 AM: Spectral Cytometer Hardware - Fluidics and Lasers
 
-12:00 - 01:30 PM: Lunch (sponsored by Slingshot Biosciences)
+12:00 - 01:30 PM: Lunch
 
 01:30 - 02:00 PM: Special Topics Roundup
 
